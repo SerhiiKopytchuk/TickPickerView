@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct TickPickerConfig {
     var tickWidth: CGFloat = 3
@@ -15,6 +18,7 @@ struct TickPickerConfig {
     var interactionHeight: CGFloat = 60
     var activeTint: Color = .yellow
     var inActiveTint: Color = .primary
+    var hapticsEnabled: Bool = true
     var alignment: Alignment = .bottom
     var animation: Animation = .interpolatingSpring(duration: 0.3, bounce: 0, initialVelocity: 0)
 
@@ -99,6 +103,8 @@ struct TickPicker: View {
         }
         .allowsHitTesting(isInitialSetupDone)
         .onChange(of: scrollIndex) { oldValue, newValue in
+            guard oldValue != newValue else { return }
+            triggerSelectionHaptic()
             Task {
                 selection = newValue
             }
@@ -134,6 +140,14 @@ struct TickPicker: View {
 
     var width: CGFloat {
         return config.tickWidth + (2 * config.tickHPadding)
+    }
+
+    private func triggerSelectionHaptic() {
+        guard config.hapticsEnabled else { return }
+        #if os(iOS)
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
+        #endif
     }
 
 

@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct GlassTickPickerConfig {
     var tickWidth: CGFloat = 2
@@ -17,6 +20,7 @@ struct GlassTickPickerConfig {
     var activeTint: Color = .blue
     var inActiveTint: Color = .primary
     var knobColor: Color = .white
+    var hapticsEnabled: Bool = true
     var animation: Animation = .interpolatingSpring(duration: 0.3, bounce: 0, initialVelocity: 0)
 
     enum Alignment: String, CaseIterable {
@@ -156,6 +160,7 @@ struct GlassTickPicker: View {
                         let clampedIndex = max(min(newIndex, maxIndex), 0)
 
                         if clampedIndex != scrollIndex {
+                            triggerSelectionHaptic()
                             enqueueTransition(from: scrollIndex, to: clampedIndex)
                             scrollIndex = clampedIndex
                         }
@@ -242,6 +247,14 @@ struct GlassTickPicker: View {
         } else {
             return false
         }
+    }
+
+    private func triggerSelectionHaptic() {
+        guard config.hapticsEnabled else { return }
+        #if os(iOS)
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
+        #endif
     }
 }
 

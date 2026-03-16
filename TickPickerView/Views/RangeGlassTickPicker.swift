@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct RangeGlassTickPickerConfig {
     var tickWidth: CGFloat = 2
@@ -17,6 +20,7 @@ struct RangeGlassTickPickerConfig {
     var activeTint: Color = .blue
     var inActiveTint: Color = .primary
     var knobColor: Color = .white
+    var hapticsEnabled: Bool = true
     var animation: Animation = .interpolatingSpring(duration: 0.3, bounce: 0, initialVelocity: 0)
 
     enum Alignment: String, CaseIterable {
@@ -154,13 +158,21 @@ struct RangeGlassTickPicker: View {
                             let rawOffset = lowerStartOffset + value.translation.width
                             let clampedOffset = min(max(rawOffset, 0), upperOffset)
                             lowerOffset = clampedOffset
-                            lowerIndex = indexForOffset(clampedOffset, count: count, width: safeWidth)
+                            let newLowerIndex = indexForOffset(clampedOffset, count: count, width: safeWidth)
+                            if newLowerIndex != lowerIndex {
+                                triggerSelectionHaptic()
+                            }
+                            lowerIndex = newLowerIndex
                         } else {
                             isDraggingUpper = true
                             let rawOffset = upperStartOffset + value.translation.width
                             let clampedOffset = max(min(rawOffset, safeWidth), lowerOffset)
                             upperOffset = clampedOffset
-                            upperIndex = indexForOffset(clampedOffset, count: count, width: safeWidth)
+                            let newUpperIndex = indexForOffset(clampedOffset, count: count, width: safeWidth)
+                            if newUpperIndex != upperIndex {
+                                triggerSelectionHaptic()
+                            }
+                            upperIndex = newUpperIndex
                         }
 
                         selection = selectionForIndex(lowerIndex, count: count)...selectionForIndex(upperIndex, count: count)
@@ -247,6 +259,14 @@ struct RangeGlassTickPicker: View {
         } else {
             return false
         }
+    }
+
+    private func triggerSelectionHaptic() {
+        guard config.hapticsEnabled else { return }
+        #if os(iOS)
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
+        #endif
     }
 }
 
